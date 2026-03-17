@@ -1,0 +1,14 @@
+# Abhängigkeiten (werden über npm install geladen)
+node_modules/
+
+# Datenbank (enthält deine persönlichen Testdaten)
+*.db
+*.db-journal
+
+# Betriebssystem-Dateien
+.DS_Store
+Thumbs.db
+
+# Build-Ordner
+out/
+dist/

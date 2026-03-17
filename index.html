@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>IT & ESG Reporting Tool - Enterprise</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="startScreen" class="modal-overlay" style="display:flex; background: #2c3e50; z-index: 10002; flex-direction: column; align-items: center; justify-content: center;">
+        <img src="assets/favicon.svg" style="height: 100px;">
+        <h1 style="color: white; margin-bottom: 40px; font-size: 2.5rem;">🌱 CSRD Manager</h1>
+        <div style="display: flex; gap: 20px;">
+            <button onclick="startAppFlow()" style="padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #18bc9c; color: white; border: none; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">▶ Programm starten</button>
+            <button onclick="startAdminFlow()" style="padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #34495e; color: white; border: 1px solid #7f8c8d; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">⚙️ Administration</button>
+        </div>
+        <div id="startScreenHint" style="color: #bdc3c7; margin-top: 20px; font-size: 0.9rem;"></div>
+    </div>
+
+    <div id="loginOverlay" class="modal-overlay" style="display:none; background: rgba(44, 62, 80, 0.95); z-index: 10001;">
+        <div class="modal-content" style="width: 350px;">
+            <h2 id="loginTitle" style="text-align:center;">🔒 Login</h2>
+            <input type="text" id="loginUser" placeholder="Benutzername">
+            <input type="password" id="loginPass" placeholder="Passwort">
+            
+            <button onclick="handleLogin()" class="submit-btn" style="margin-bottom: 10px;">Anmelden</button>
+            <button onclick="showStartScreen()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">Zurück</button>
+            
+            <p id="loginError" style="color:#e74c3c; display:none; text-align:center; margin-top:10px;">Zugriff verweigert.</p>
+        </div>
+    </div>
+    <div id="loginOverlay" class="modal-overlay" style="display:none; background: #2c3e50; z-index: 10000;">
+        <div class="modal-content" style="width: 350px;">
+            <h2 style="text-align:center;">🔒 ESG Tool Login</h2>
+            <input type="text" id="loginUser" placeholder="Benutzername">
+            <input type="password" id="loginPass" placeholder="Passwort">
+            <button onclick="handleLogin()" class="submit-btn">Anmelden</button>
+            <p id="loginError" style="color:#e74c3c; display:none; text-align:center; margin-top:10px;">Zugriff verweigert.</p>
+        </div>
+    </div>
+
+    <div id="sidebar" style="display:none;">
+        <div style="padding: 20px; text-align: center;">
+            <h2 id="appLogo">🌱 ESG Tool</h2>
+            <small id="userDisplay" style="color: #bdc3c7;"></small>
+        </div>
+        <div id="navLinks"></div> <hr style="border: 0; border-top: 1px solid #3e4f5f; margin: 20px 0;">
+        <div id="logoutArea"></div>
+    </div>
+
+    <div id="content">
+   <div id="unifiedDashboard" class="card active">
+    <h2>Nachhaltigkeits-Dashboard & Datenerfassung</h2>
+    
+    <div id="unifiedTileContainer" style="
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 15px; 
+    margin-bottom: 30px;">
+</div>
+
+    <div id="esrsDetailView" style="display: none; border-top: 2px solid #eee; padding-top: 20px;">
+        <h2 id="activeEsrsTitle" style="color: #2c3e50; margin-bottom: 15px;">Thema</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+            <button class="sub-tab-btn active" onclick="window.switchSubTab('charts', this)" style="padding: 8px 15px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 4px;">📈 Grafische Auswertung</button>
+            <button class="sub-tab-btn" onclick="window.switchSubTab('entry', this)" style="padding: 8px 15px; cursor: pointer; background: #ecf0f1; border: none; border-radius: 4px;">📝 Daten erfassen</button>
+            <button class="sub-tab-btn" onclick="window.switchSubTab('table', this)" style="padding: 8px 15px; cursor: pointer; background: #ecf0f1; border: none; border-radius: 4px;">🗄️ Tabellarische Auswertung</button>
+        </div>
+
+        <div id="subTab_charts" class="sub-tab-content" style="display: block;">
+            <div id="chartsContainer">Wähle ein Thema, um Grafiken zu sehen.</div>
+        </div>
+
+        <div id="subTab_entry" class="sub-tab-content" style="display: none;">
+            <form id="inlineDataForm" style="max-width: 500px; background: #fdfdfd; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                <label>KPI auswählen:</label>
+                <select id="inlineKpiSelect" style="width: 100%; padding: 8px; margin-bottom: 15px;" onchange="window.showInlineKPIInfo()"></select>
+                
+                <div id="inlineKpiInfoBox" style="display:none; margin-bottom: 15px; font-size: 0.9rem; color: #7f8c8d;"></div>
+                
+                <label>Datum:</label>
+                <input type="date" id="inlineInputDatum" style="width: 100%; padding: 8px; margin-bottom: 15px;" required>
+                
+                <label>Wert (<span id="inlineKpiUnitDisplay">-</span>):</label>
+                <input type="number" step="any" id="inlineInputWert" style="width: 100%; padding: 8px; margin-bottom: 15px;" required>
+                
+                <button type="submit" style="background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">💾 Messwert speichern</button>
+                <div id="inlineErfolgsMeldung" style="display:none; color: #27ae60; margin-top: 10px;">✅ Gespeichert!</div>
+            </form>
+        </div>
+
+        <div id="subTab_table" class="sub-tab-content" style="display: none;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <tbody id="inlineHistoryTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>     
+        <div id="wesentlichkeit" class="card">
+    <h1>🎯 Wesentlichkeitsanalyse (CSRD)</h1>
+    <p style="margin-bottom: 15px; color: #7f8c8d;">
+        Bewerten Sie die Themen getrennt nach der doppelten Wesentlichkeit.
+    </p>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        <div style="display: flex; gap: 10px;">
+            <button id="tabImpact" onclick="window.switchMaterialityTab('Impact')" style="padding: 10px 20px; cursor: pointer; border: none; background: #18bc9c; color: white; font-weight: bold; border-radius: 4px;">🌍 Impact (Auswirkungen)</button>
+            <button id="tabFinancial" onclick="window.switchMaterialityTab('Financial')" style="padding: 10px 20px; cursor: pointer; border: none; background: #f8f9fa; color: #333; border-radius: 4px;">💰 Financial (Risiken/Chancen)</button>
+        </div>
+        <button onclick="window.openHelpModal()" style="padding: 8px 15px; cursor: pointer; border: 1px solid #3498db; background: transparent; color: #3498db; font-weight: bold; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+            ℹ️ Hilfe / Erklärung
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="csrd-table">
+            <thead id="materialityThead">
+                </thead>
+            <tbody id="materialityTableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+    
+    <div id="stammdaten" class="card">
+            <h1>KPI Stammdaten & Status</h1>
+            <p style="color: #7f8c8d; margin-bottom: 15px;">
+                Hier verwalten Sie messbare KPIs zu Ihren ESRS-Themen. Das integrierte Ampelsystem zeigt sofort, ob bereits Daten erfasst wurden.
+            </p>
+            
+            <div style="display: flex; gap: 20px; margin-bottom: 20px; background: #f8f9fa; padding: 10px 15px; border-radius: 6px; border: 1px solid #eee; width: max-content;">
+                <span style="display:flex; align-items:center; gap:5px; font-size: 0.95rem;">🟢 <strong>Aktuell</strong> (Daten erfasst)</span>
+                <span style="display:flex; align-items:center; gap:5px; font-size: 0.95rem;">🔴 <strong>Überfällig</strong> (Noch keine Daten vorhanden)</span>
+            </div>
+            
+            <input type="text" id="searchInput" onkeyup="window.filterTable()" placeholder="🔍 Themen suchen..." style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+            
+            <div style="overflow-x: auto;">
+                <table id="kpiTable" class="csrd-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #ddd;">
+                            <th style="width: 25%; padding: 12px; text-align: left;">Thema (ESRS)</th>
+                            <th style="width: 25%; padding: 12px; text-align: left;">Unterthema</th>
+                            <th style="width: 35%; padding: 12px; text-align: left;">Verknüpfte KPIs (Status)</th>
+                            <th style="width: 15%; padding: 12px; text-align: center;">Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kpiTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+<div id="narrativen" class="card">
+    <h1>📝 Nachhaltigkeitsbericht</h1>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+        <button id="tabBtnErfassung" onclick="window.switchReportTab('erfassung')" 
+                style="padding: 10px 20px; cursor: pointer; border: none; background: #18bc9c; color: white; font-weight: bold; border-radius: 4px;">
+            ✍️ Texte erfassen
+        </button>
+        <button id="tabBtnVorschau" onclick="window.switchReportTab('vorschau')" 
+                style="padding: 10px 20px; cursor: pointer; border: none; background: #f8f9fa; color: #333; border-radius: 4px;">
+            📄 Berichtsvorschau & PDF
+        </button>
+    </div>
+
+    <div id="reportTab_erfassung">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 10px;">ESRS Thema zur Bearbeitung wählen:</label>
+            <select id="narrativeTopicSelect" onchange="window.loadNarrative()" style="width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #ccc; background: white;">
+                <option value="">-- Bitte wählen --</option>
+                <option value="E1">E1: Klimawandel</option>
+                <option value="E2">E2: Umweltverschmutzung</option>
+                <option value="E5">E5: Kreislaufwirtschaft</option>
+                <option value="S1">S1: Eigene Belegschaft</option>
+                <option value="G1">G1: Governance</option>
+            </select>
+        </div>
+        <div style="margin-top: 20px; padding: 15px; border: 1px dashed #ced4da; border-radius: 4px; background: #fdfdfd;">
+    <label style="font-weight: 600; display: block; margin-bottom: 8px;">🖼️ Bild-Anhang für dieses Thema:</label>
+    <input type="file" id="fileImageUpload" accept="image/*" style="width: 100%; margin-bottom: 10px;">
+    <div id="imagePreviewContainer" style="margin-top: 10px; display: none;">
+        <p style="font-size: 0.8rem; color: #666;">Vorschau:</p>
+        <img id="imgPreview" src="" style="max-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+        <button onclick="window.removeImage()" style="display: block; color: red; border: none; background: none; cursor: pointer; font-size: 0.8rem;">Bild entfernen</button>
+    </div>
+</div>
+<div id="imageCaptionContainer" style="display: none; margin-top: 15px; padding: 10px; background: #f1f1f1; border-radius: 4px; border: 1px solid #ddd;">
+    <label style="font-weight: bold; font-size: 0.9rem; color: #333; display: block; margin-bottom: 5px;">
+        Bildunterschrift / Label:
+    </label>
+    <input type="text" id="txtImageCaption" 
+           placeholder="z.B. Abb. 1: Unser CO2-Fußabdruck" 
+           style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: white; color: black;">
+</div>
+        <div id="narrativeEditor" style="display:none; background: white; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+            <h3 id="currentTopicTitle" style="color: #18bc9c; margin-top: 0;">Thema bearbeiten</h3>
+            
+            <label style="display:block; margin-top:15px; font-weight:600;">Strategie & Geschäftsmodell:</label>
+            <textarea id="txtStrategy" style="width:100%; height:120px; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:4px; font-family: inherit;"></textarea>
+            
+            <label style="display:block; margin-top:15px; font-weight:600;">Richtlinien (Policies):</label>
+            <textarea id="txtPolicies" style="width:100%; height:120px; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:4px; font-family: inherit;"></textarea>
+            
+            <label style="display:block; margin-top:15px; font-weight:600;">Maßnahmen (Actions):</label>
+            <textarea id="txtMeasures" style="width:100%; height:120px; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:4px; font-family: inherit;"></textarea>
+            
+            <button onclick="window.saveNarrative()" class="submit-btn" style="width:100%; margin-top:20px; background: #18bc9c;">💾 Texte für dieses Thema speichern</button>
+        </div>
+    </div>
+
+    <div id="reportTab_vorschau" style="display:none; padding:20px;">
+        <div class="no-print" style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bdc3c7;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin:0; color: #2c3e50;">🚀 Berichts-Archivierung & Export</h4>
+                <button onclick="window.startFinalizeProcess()" 
+                        style="background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    🛡️ Neuen Audit-Stand & Bericht finalisieren
+                </button>
+            </div>
+
+            <div style="background: white; border-radius: 4px; border: 1px solid #ddd; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #eee; text-align: left;">
+                            <th style="padding: 10px;">Datum & Zeit</th>
+                            <th style="padding: 10px;">Dateiname</th>
+                            <th style="padding: 10px; text-align: center;">Audit-DB</th>
+                            <th style="padding: 10px; text-align: center;">Bericht</th>
+                            <th style="padding: 10px; text-align: right;">Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportHistoryTable">
+                        </tbody>
+                </table>
+            </div>
+            <div id="backupStatus" style="margin-top: 10px; font-size: 0.8rem; text-align: right;"></div>
+        </div>
+
+        <div style="margin-bottom: 10px; font-weight: bold; color: #7f8c8d;" class="no-print">Vorschau des aktuellen Entwurfs:</div>
+        <div id="fullReportContent" style="background: white; padding: 40px; border: 1px solid #ddd; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 500px;">
+            </div>
+    </div>
+</div>
+        <div id="adminArea" class="card">
+            <h1>⚙️ Admin-Konfiguration (Superuser)</h1>
+            <div class="admin-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; border:1px solid #eee;">
+                    <div id="moduleSwitches"></div>
+                </div>
+                <div id="userManagementPanel" style="background:#f8f9fa; padding:20px; border-radius:8px; border:1px solid #eee;">
+                    <h3>👤 Benutzerverwaltung</h3>
+                    <div id="userControls">
+                        <input type="text" id="newUserName" placeholder="Name">
+                        <input type="password" id="newUserPass" placeholder="Passwort">
+                        <select id="newUserRole" style="width: 100%; padding: 12px; margin-bottom: 15px;">
+                            <option value="user">Mitarbeiter (Erfassung)</option>
+                            <option value="admin">Manager (KPI Admin)</option>
+                        </select>
+                        <button onclick="window.createUser()" class="submit-btn">User anlegen</button>
+                    </div>
+                </div>
+            </div>
+            <h3 style="margin-top:40px;">Zuständigkeiten & Rollen</h3>
+            <table id="userTable">
+                <thead><tr><th>User</th><th>Kategorie zuweisen</th><th>Zugewiesene Module</th><th>Aktion</th></tr></thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
+  <div id="addKpiModal" class="modal-overlay" style="display:none; z-index: 10005;">
+            <div class="modal-content" style="width: 400px;">
+                <h3 style="margin-top:0;">Neuen KPI hinzufügen</h3>
+                <p style="font-size:0.9rem; color:#7f8c8d; margin-bottom:15px;" id="addKpiSubtitle"></p>
+                
+                <input type="hidden" id="addKpiThema">
+                <input type="hidden" id="addKpiUnterthema">
+                
+                <label>KPI Name (z.B. Stromverbrauch):</label>
+                <input type="text" id="addKpiName" style="width: 100%; padding: 8px; margin-bottom: 15px;" required>
+                
+                <label>Einheit (z.B. kWh, Tonnen, %):</label>
+                <input type="text" id="addKpiEinheit" style="width: 100%; padding: 8px; margin-bottom: 20px;" required>
+                
+                <button onclick="window.saveLinkedKpi()" class="submit-btn" style="width:100%; background:#18bc9c; border:none; padding:10px;">💾 Speichern</button>
+                <button onclick="window.closeAddKpiModal()" style="width:100%; margin-top:10px; padding:10px; background:transparent; border:1px solid #ccc; cursor:pointer;">Abbrechen</button>
+            </div>
+        </div>
+
+    <div id="helpModal" class="modal-overlay" style="display:none; z-index: 10001;">
+        
+        <div class="modal-content" style="width: 850px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column;"> 
+            
+            <h2 id="helpModalTitle" style="color: #2c3e50; margin-top: 0; flex-shrink: 0;">Hilfe</h2>
+            
+            <div id="helpModalContent" style="line-height: 1.6; color: #34495e; margin-bottom: 20px; font-size: 0.95rem; overflow-y: auto; flex-grow: 1; padding-right: 10px;">
+                </div>
+            
+            <button onclick="window.closeHelpModal()" class="submit-btn" style="width: 100%; background: #34495e; border: none; flex-shrink: 0;">Schließen</button>
+        
+        </div>
+    </div>
+    <div id="statusBar" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 25px; background: #34495e; color: white; font-size: 0.75rem; display: flex; align-items: center; padding: 0 15px; transition: background 0.5s ease; z-index: 9999;">
+    <span id="statusText">System bereit.</span>
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/xlsx.full.min.js"></script> 
+    <script src="js/database.js"></script>  
+    <script src="js/modules/admin.js"></script>
+    <script src="js/modules/kpi.js"></script>
+    <script src="js/modules/ui.js"></script>
+    <script src="js/modules/dashboard.js"></script>
+    <script src="js/modules/materiality.js"></script>
+     <script src="js/modules/narratives.js"></script>
+    <script src="js/app.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
